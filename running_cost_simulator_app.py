@@ -78,7 +78,7 @@ with st.form(key='my_form'):
     submitted = st.form_submit_button(label='シミュレーション')
 
 def calc_car_tax(disp_cc: int) -> float:
-    return CAR_TAX_TABLE['price'][disp_cc == CAR_TAX_TABLE['disp_range']][0]
+    return CAR_TAX_TABLE['price'][disp_cc == CAR_TAX_TABLE['disp_range']].iloc[0]
 
 # gas price fluctuations with Brownian motion
 # These values (the mean and standard deviation of return of gas price)
@@ -149,16 +149,15 @@ if submitted:
 
     axes[0].plot(np.arange(1, 11), gas_10y_multi, color = 'black', alpha=0.05)
     mean_gas = gas_10y_multi.mean(axis=1)
-    # CI are too small so omitted this.
-    # std_error_gas = gas_10y_multi.std(axis=1) / np.sqrt(gas_10y_multi.shape[1])
-    # confidence_interval_gas = 1.96 * std_error_gas  # 95%信頼区間のための1.96
-    # upper_bound_gas = mean_gas + confidence_interval_gas
-    # lower_bound_gas = mean_gas - confidence_interval_gas
+    std_error_gas = gas_10y_multi.std(axis=1)
+    confidence_interval_gas = 1.96 * std_error_gas  # 95%信頼区間のための1.96
+    upper_bound_gas = mean_gas + confidence_interval_gas
+    lower_bound_gas = mean_gas - confidence_interval_gas
 
-    # # 95%信頼区間のプロット
-    # axes[0].fill_between(np.arange(1,11), lower_bound_gas, upper_bound_gas, color='blue', alpha=0.1)
-    # axes[0].plot(np.arange(1,11), upper_bound_gas, color='blue', linewidth=2, linestyle='--', label='95% Confidence Interval')
-    # axes[0].plot(np.arange(1,11), lower_bound_gas, color='blue', linewidth=2, linestyle='--')
+    # 95%信頼区間のプロット
+    axes[0].fill_between(np.arange(1,11), lower_bound_gas, upper_bound_gas, color='blue', alpha=0.1)
+    axes[0].plot(np.arange(1,11), upper_bound_gas, color='blue', linewidth=2, linestyle='--', label='95% Confidence Interval')
+    axes[0].plot(np.arange(1,11), lower_bound_gas, color='blue', linewidth=2, linestyle='--')
     axes[0].plot(np.arange(1, 11), mean_gas.T, linewidth=3, color='red', label='Average')
 
     axes[0].set_title('gas price simulation with Brownian motion')
@@ -169,15 +168,15 @@ if submitted:
 
     mean_series = cost_10y_multi.mean(axis=1)
     # 95%信頼区間の計算
-    std_error = cost_10y_multi.std(axis=1) / np.sqrt(cost_10y_multi.shape[1])
+    std_error = cost_10y_multi.std(axis=1)
     confidence_interval = 1.96 * std_error  # 95%信頼区間のための1.96
     upper_bound = mean_series + confidence_interval
     lower_bound = mean_series - confidence_interval
 
-    # # 95%信頼区間のプロット
-    # axes[1].fill_between(np.arange(1,11), lower_bound, upper_bound, color='skyblue', alpha=0.2)
-    # axes[1].plot(np.arange(1,11), upper_bound, color='blue', linewidth=2, linestyle='--', label='95% Confidence Interval')
-    # axes[1].plot(np.arange(1,11), lower_bound, color='blue', linewidth=2, linestyle='--')
+    # 95%信頼区間のプロット
+    axes[1].fill_between(np.arange(1,11), lower_bound, upper_bound, color='skyblue', alpha=0.2)
+    axes[1].plot(np.arange(1,11), upper_bound, color='blue', linewidth=2, linestyle='--', label='95% Confidence Interval')
+    axes[1].plot(np.arange(1,11), lower_bound, color='blue', linewidth=2, linestyle='--')
 
     axes[1].plot(np.arange(1, 11), mean_series.T, linewidth=3, color='red', label='Average')
 
