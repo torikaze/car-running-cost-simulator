@@ -2,8 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-# this generate 'ModuleNotFoundError'
-# import japanize_matplotlib
+import japanize_matplotlib
 
 @st.cache_data
 def simulate_10y_cost_mycar(
@@ -132,22 +131,22 @@ if st.session_state['result']:
     # Visualize the results
     df = pd.DataFrame({'Year': range(1, 11), 'cost': cost_10y})
 
-    fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True)
+    fig, axes = plt.subplots(nrows=1, ncols=2, sharex=True, figsize=(8, 4))
     axes[0].bar(np.arange(1, 11)-0.2, df['cost'], alpha=0.8, label='車購入', width=0.4, color='skyblue')
     axes[0].plot(np.arange(1, 11), df['cost'], alpha=0.8, color='skyblue')
-    axes[0].set_title('Annual costs')
+    axes[0].set_title('毎年の費用')
     # axes[0].set_ylim(0, 40)
 
     axes[1].bar(np.arange(1, 11)-0.2, np.cumsum(df['cost']), alpha=0.8, width=0.4, color='skyblue')
     axes[1].plot(np.arange(1, 11), np.cumsum(df['cost']), alpha=0.8, color='skyblue')
     # fig.legend(loc='upper center', ncol=6, bbox_to_anchor=(0.5, 1.05))
-    axes[1].set_title('Cumulative costs')
+    axes[1].set_title('毎年の累積費用')
 
     axes[1].set_xticks(np.arange(1, 11))
     axes[1].set_xticklabels(np.arange(1, 11))
 
-    fig.supxlabel('Year')
-    fig.supylabel('cost (10 thousand)')
+    fig.supxlabel('年')
+    fig.supylabel('費用（万円）')
     st.pyplot(fig)
     st.markdown('## ガソリン価格の変動を加味したシミュレーション')
     st.markdown(
@@ -155,7 +154,7 @@ if st.session_state['result']:
     gas_10y_multi = gas_10y_multi * 10000
 
     y_min_annualcost, y_max_annualcost = st.slider('毎年の費用の表示範囲', np.min(cost_10y_multi)*0.9, np.max(cost_10y_multi)*1.1, (np.min(cost_10y_multi)*0.9, np.max(cost_10y_multi)*1.1), 0.5)
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(8, 4))
     axes[0].plot(np.arange(1, 11), gas_10y_multi, color = 'black', alpha=0.05)
     mean_gas = gas_10y_multi.mean(axis=1)
     std_error_gas = gas_10y_multi.std(axis=1)
@@ -164,9 +163,11 @@ if st.session_state['result']:
     lower_bound_gas = mean_gas - confidence_interval_gas
     axes[0].fill_between(np.arange(1,11), lower_bound_gas, upper_bound_gas, color='blue', alpha=0.1)
     axes[0].plot(np.arange(1, 11), mean_gas.T, linewidth=3, color='red', label='Average')
-    axes[0].plot(np.arange(1,11), upper_bound_gas, color='blue', alpha=0.5, linewidth=2, linestyle='--', label='95% Confidence Interval')
+    axes[0].plot(np.arange(1,11), upper_bound_gas, color='blue', alpha=0.5, linewidth=2, linestyle='--', label='95% 信頼区間')
     axes[0].plot(np.arange(1,11), lower_bound_gas, color='blue', alpha=0.5, linewidth=2, linestyle='--')
-    axes[0].set_title('gas price simulation with Brownian motion')
+    axes[0].set_title('ブラウン運動を用いたガソリンの変動シミュレーション')
+    axes[0].set_ylabel('ガソリン価格（円）')
+
     axes[0].legend()
 
     axes[1].plot(np.arange(1, 11), cost_10y_multi, linewidth=1, color='black', alpha=0.05)
@@ -177,13 +178,12 @@ if st.session_state['result']:
     lower_bound = mean_series - confidence_interval
     axes[1].fill_between(np.arange(1,11), lower_bound, upper_bound, color='skyblue', alpha=0.2)
     axes[1].plot(np.arange(1, 11), mean_series.T, linewidth=3, color='red', label='Average')
-    axes[1].plot(np.arange(1,11), upper_bound, color='blue', alpha=0.5, linewidth=2, linestyle='--', label='95% Confidence Interval')
+    axes[1].plot(np.arange(1,11), upper_bound, color='blue', alpha=0.5, linewidth=2, linestyle='--', label='95% 信頼区間')
     axes[1].plot(np.arange(1,11), lower_bound, color='blue', alpha=0.5, linewidth=2, linestyle='--')
-    axes[1].set_title('with gasoline fluctuations')
+    axes[1].set_title('ガソリン価格の変動を考慮')
     axes[1].set_ylim(y_min_annualcost, y_max_annualcost)
-    axes[1].set_xlabel('Year')
-    axes[1].set_ylabel('cost (10 thousand)')
-    #axes[1].set_yticks([])
+    axes[1].set_ylabel('費用(万円)')
+    fig.supxlabel('年')
     axes[1].legend()
     fig.tight_layout()
     st.pyplot(fig)
