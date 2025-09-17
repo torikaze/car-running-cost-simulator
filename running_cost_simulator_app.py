@@ -122,33 +122,34 @@ def calculate_cost_simulations(car_price: float, inspection_cost: float, option_
     ])
     return cost_multi.T
 
-def create_annual_cost_chart(df: pd.DataFrame) -> go.Figure:
-    """Create chart for annual costs"""
+# 定数定義を追加
+COST_CATEGORIES = [
+    ('車両購入費', 'car_price', 'rgb(31, 119, 180)'),      
+    ('自動車税', 'car_tax', 'rgb(255, 127, 14)'),          
+    ('ガソリン代', 'gas_cost', 'rgb(44, 160, 44)'),        
+    ('駐車場代', 'parking_fee', 'rgb(214, 39, 40)'),       
+    ('オイル交換費', 'engoil_cost', 'rgb(148, 103, 189)'), 
+    ('車検費', 'inspection_cost', 'rgb(140, 86, 75)'),     
+    ('保険料', 'insurance_cost', 'rgb(227, 119, 194)'),    
+    ('タイヤ交換費', 'tire_cost', 'rgb(127, 127, 127)')    
+]
+
+def _create_stacked_bar_chart(df: pd.DataFrame, categories: list, title: str, 
+                             hover_suffix: str = '') -> go.Figure:
+    """積み上げ棒グラフを作成する共通関数"""
     fig = go.Figure()
     
-    # 積み上げ棒グラフのためのデータ準備
-    cost_categories = [
-        ('車両購入費', 'car_price', 'rgb(31, 119, 180)'),      
-        ('自動車税', 'car_tax', 'rgb(255, 127, 14)'),          
-        ('ガソリン代', 'gas_cost', 'rgb(44, 160, 44)'),        
-        ('駐車場代', 'parking_fee', 'rgb(214, 39, 40)'),       
-        ('オイル交換費', 'engoil_cost', 'rgb(148, 103, 189)'), 
-        ('車検費', 'inspection_cost', 'rgb(140, 86, 75)'),     
-        ('保険料', 'insurance_cost', 'rgb(227, 119, 194)'),    
-        ('タイヤ交換費', 'tire_cost', 'rgb(127, 127, 127)')    
-    ]
-    
-    for name, column, color in cost_categories:
+    for name, column, color in categories:
         fig.add_trace(go.Bar(
             x=df['year'],
             y=df[column],
             name=name,
             marker_color=color,
-            hovertemplate=f'{name}: %{{y:.2f}} 万円<extra></extra>'
+            hovertemplate=f'{name}{hover_suffix}: %{{y:.2f}} 万円<extra></extra>'
         ))
     
     fig.update_layout(
-        title='年間費用',
+        title=title,
         xaxis_title='年',
         yaxis_title='費用（万円）',
         barmode='stack',
@@ -156,47 +157,36 @@ def create_annual_cost_chart(df: pd.DataFrame) -> go.Figure:
     )
     return fig
 
-def create_cumulative_cost_chart(df: pd.DataFrame) -> go.Figure:
-    """Create chart for cumulative costs"""
-    fig = go.Figure()
-    
-    # 累積費用の内訳計算
+def _prepare_cumulative_data(df: pd.DataFrame) -> pd.DataFrame:
+    """累積データを準備する関数"""
     cumulative_df = df.copy()
-    cost_columns = ['car_price', 'car_tax', 'gas_cost', 'parking_fee', 
-                   'engoil_cost', 'inspection_cost', 'insurance_cost', 'tire_cost']
+    cost_columns = [col for _, col, _ in COST_CATEGORIES]
     
     for col in cost_columns:
         cumulative_df[f'cumulative_{col}'] = cumulative_df[col].cumsum()
     
-    # 積み上げ棒グラフのためのデータ準備
-    cost_categories = [
-        ('車両購入費', 'cumulative_car_price', 'rgb(255, 99, 132)'),
-        ('自動車税', 'cumulative_car_tax', 'rgb(54, 162, 235)'),
-        ('ガソリン代', 'cumulative_gas_cost', 'rgb(255, 205, 86)'),
-        ('駐車場代', 'cumulative_parking_fee', 'rgb(75, 192, 192)'),
-        ('オイル交換費', 'cumulative_engoil_cost', 'rgb(153, 102, 255)'),
-        ('車検費', 'cumulative_inspection_cost', 'rgb(255, 159, 64)'),
-        ('保険料', 'cumulative_insurance_cost', 'rgb(255, 99, 255)'),
-        ('タイヤ交換費', 'cumulative_tire_cost', 'rgb(199, 199, 199)')
+    return cumulative_df
+
+def create_annual_cost_chart(df: pd.DataFrame) -> go.Figure:
+    """Create chart for annual costs"""
+    return _create_stacked_bar_chart(df, COST_CATEGORIES, '年間費用')
+
+def create_cumulative_cost_chart(df: pd.DataFrame) -> go.Figure:
+    """Create chart for cumulative costs"""
+    cumulative_df = _prepare_cumulative_data(df)
+    
+    # 累積用のカテゴリを作成
+    cumulative_categories = [
+        (name, f'cumulative_{column}', color) 
+        for name, column, color in COST_CATEGORIES
     ]
     
-    for name, column, color in cost_categories:
-        fig.add_trace(go.Bar(
-            x=cumulative_df['year'],
-            y=cumulative_df[column],
-            name=name,
-            marker_color=color,
-            hovertemplate=f'{name}累積: %{{y:.2f}} 万円<extra></extra>'
-        ))
-    
-    fig.update_layout(
-        title='累積費用',
-        xaxis_title='年',
-        yaxis_title='費用（万円）',
-        barmode='stack',
-        hovermode='x unified'
+    return _create_stacked_bar_chart(
+        cumulative_df, 
+        cumulative_categories, 
+        '累積費用', 
+        '累積'
     )
-    return fig
 
 def create_gas_price_chart(gas_prices: np.array, simulation_years: int, n_display: int = 100) -> go.Figure:
     """Create chart for gas price fluctuations"""
