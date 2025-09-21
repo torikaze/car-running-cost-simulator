@@ -32,7 +32,7 @@ def simulate_cost_mycar(
         total_mileage += mileage
         thresh_engoil_replace += mileage
         
-        # 各項目のコスト初期化
+        # Initialize costs for each category
         year_car_price = car_price if year == 1 else 0
         year_car_tax = car_tax
         year_gas_cost = (mileage / fuel_efficiency) * gas_price[year-1]
@@ -42,12 +42,12 @@ def simulate_cost_mycar(
         year_insurance_cost = insurance_price_current
         year_tire_cost = 0
         
-        # エンジンオイル交換（指定km毎）
+        # Engine oil replacement (every specified km)
         if thresh_engoil_replace >= engoil_interval:
             thresh_engoil_replace -= engoil_interval
             year_engoil_cost = engoil_price
 
-        # 車検費用
+        # Vehicle inspection cost
         if is_used_car:
             if year >= 3 and (year-3) % 2 == 0:
                 year_inspection_cost = inspection_cost_current
@@ -58,19 +58,19 @@ def simulate_cost_mycar(
                 year_inspection_cost = inspection_cost_current
             if year >= 4:
                 inspection_cost_current = inspection_cost_current * 1.05
-        # 保険料の増減
+        # Insurance premium changes
         if year > 1:
             insurance_price_current = insurance_price_current * (1 + insurance_rate / 100)
 
-        # タイヤ交換（指定年数毎）
+        # Tire replacement (every specified years)
         if year > 1 and (year - 1) % tire_interval == 0:
             year_tire_cost = tire_price
         
-        # 年間総コスト
+        # Annual total cost
         year_total = (year_car_price + year_car_tax + year_gas_cost + year_parking_fee + 
                      year_engoil_cost + year_inspection_cost + year_insurance_cost + year_tire_cost)
         
-        # 結果を記録
+        # Record results
         cost_breakdown['year'].append(year)
         cost_breakdown['car_price'].append(year_car_price)
         cost_breakdown['car_tax'].append(year_car_tax)
@@ -122,7 +122,7 @@ def calculate_cost_simulations(car_price: float, inspection_cost: float, option_
     ])
     return cost_multi.T
 
-# 定数定義を追加
+# Define constants
 COST_CATEGORIES = [
     ('車両購入費', 'car_price', 'rgb(31, 119, 180)'),      
     ('自動車税', 'car_tax', 'rgb(255, 127, 14)'),          
@@ -136,7 +136,7 @@ COST_CATEGORIES = [
 
 def _create_stacked_bar_chart(df: pd.DataFrame, categories: list, title: str, 
                              hover_suffix: str = '') -> go.Figure:
-    """積み上げ棒グラフを作成する共通関数"""
+    """Common function to create stacked bar charts"""
     fig = go.Figure()
     
     for name, column, color in categories:
@@ -158,7 +158,7 @@ def _create_stacked_bar_chart(df: pd.DataFrame, categories: list, title: str,
     return fig
 
 def _prepare_cumulative_data(df: pd.DataFrame) -> pd.DataFrame:
-    """累積データを準備する関数"""
+    """Function to prepare cumulative data"""
     cumulative_df = df.copy()
     cost_columns = [col for _, col, _ in COST_CATEGORIES]
     
@@ -175,7 +175,7 @@ def create_cumulative_cost_chart(df: pd.DataFrame) -> go.Figure:
     """Create chart for cumulative costs"""
     cumulative_df = _prepare_cumulative_data(df)
     
-    # 累積用のカテゴリを作成
+    # Create categories for cumulative data
     cumulative_categories = [
         (name, f'cumulative_{column}', color) 
         for name, column, color in COST_CATEGORIES
@@ -332,7 +332,7 @@ def setup_ui_components():
     parking_fare = st.sidebar.number_input('駐車場月額（万円）:', min_value=0.0, format='%f')
     inspection_cost = st.sidebar.number_input('初回車検費用（万円）:', value=7.0, min_value=0.0, format='%f')
 
-    # 詳細設定のexpander
+    # Detailed settings expander
     with st.sidebar.expander("詳細設定"):
         engoil_price = st.number_input('エンジンオイル交換費（万円）:', value=0.5, min_value=0.0, format='%f')
         engoil_interval = st.number_input('エンジンオイル交換距離（km）:', value=5000.0, min_value=1000.0, format='%f')
@@ -426,7 +426,7 @@ def main():
         st.plotly_chart(fig2, use_container_width=True)
         st.markdown("#### テーブル表示")
         
-        # コスト内訳の表示用データフレーム作成
+        # Create display dataframe for cost breakdown
         display_df = df.copy()
         display_df = display_df.rename(columns={
             'year': '年',
